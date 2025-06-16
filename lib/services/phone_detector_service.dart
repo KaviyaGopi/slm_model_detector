@@ -12,19 +12,55 @@ class PhoneDetectorService {
         String brand = androidInfo.brand.toLowerCase();
         String model = androidInfo.model.toLowerCase();
         String product = androidInfo.product.toLowerCase();
+        String manufacturer = androidInfo.manufacturer.toLowerCase();
 
-        return _normalizePhoneModel(brand, model, product);
+        // Debug print to see what values we're getting
+        print(
+            'Debug - Brand: $brand, Model: $model, Product: $product, Manufacturer: $manufacturer');
+        print(
+            'Debug - Device: ${androidInfo.device}, Hardware: ${androidInfo.hardware}');
+
+        return _normalizePhoneModel(
+            brand, model, product, manufacturer, androidInfo);
       }
-      return 'unknown';
+      return 'Unknown Device';
     } catch (e) {
       print('Error detecting phone model: $e');
-      return 'unknown';
+      return 'Unknown Device';
     }
   }
 
-  static String _normalizePhoneModel(
-      String brand, String model, String product) {
+  static String _normalizePhoneModel(String brand, String model, String product,
+      String manufacturer, AndroidDeviceInfo androidInfo) {
     String fullModel = '$brand $model'.toLowerCase();
+    String fullInfo = '$brand $model $product $manufacturer'.toLowerCase();
+
+    // Handle Android Emulator specifically
+    if (fullInfo.contains('emulator') ||
+        fullInfo.contains('sdk') ||
+        model.contains('sdk') ||
+        product.contains('sdk') ||
+        androidInfo.isPhysicalDevice == false) {
+      // Check if it's a Pixel emulator based on device name or other identifiers
+      if (fullInfo.contains('pixel') ||
+          androidInfo.device.toLowerCase().contains('pixel') ||
+          androidInfo.hardware.toLowerCase().contains('pixel')) {
+        // Try to determine which Pixel based on available info
+        if (fullInfo.contains('pixel_9') ||
+            androidInfo.device.contains('pixel_9')) {
+          return 'Google Pixel 9';
+        } else if (fullInfo.contains('pixel_8') ||
+            androidInfo.device.contains('pixel_8')) {
+          return 'Google Pixel 8a';
+        } else {
+          // Default to Pixel 8a for generic pixel emulator
+          return 'Google Pixel 8a';
+        }
+      }
+
+      // For other emulators, return a default supported device
+      return 'Samsung Galaxy S24';
+    }
 
     // Samsung Galaxy Series
     if (fullModel.contains('samsung') && fullModel.contains('galaxy')) {
@@ -40,12 +76,13 @@ class PhoneDetectorService {
     }
 
     // Google Pixel Series
-    if (fullModel.contains('pixel')) {
+    if (fullModel.contains('pixel') || manufacturer.contains('google')) {
       if (fullModel.contains('9 pro')) return 'Google Pixel 9 Pro';
       if (fullModel.contains('8 pro')) return 'Google Pixel 8 Pro';
-      if ((fullModel.contains('pixel 9') || fullModel.contains('Pixel9')) &&
+      if ((fullModel.contains('pixel 9') || fullModel.contains('pixel9')) &&
           !fullModel.contains('pro')) return 'Google Pixel 9';
       if (fullModel.contains('8a')) return 'Google Pixel 8a';
+      if (fullModel.contains('pixel 8')) return 'Google Pixel 8a';
     }
 
     // Motorola Series
