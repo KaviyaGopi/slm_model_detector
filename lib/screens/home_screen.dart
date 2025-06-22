@@ -4,6 +4,7 @@ import '../services/phone_detector_service.dart';
 import '../services/slm_model_service.dart';
 import '../services/model_download_service.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -224,6 +225,20 @@ class _HomeScreenState extends State<HomeScreen> {
           _checkDownloadedModels();
         },
         child: const Icon(Icons.refresh),
+      ),
+      // Navigation from HomeScreen
+      bottomNavigationBar: BottomAppBar(
+        child: IconButton(
+          icon: const Icon(Icons.chat),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChatScreen(downloadedModels: _downloadedModels),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
